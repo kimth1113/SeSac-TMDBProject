@@ -8,6 +8,7 @@
 import Foundation
 
 struct Movie {
+    let movieId: Int
     let releaseDate: String
     let genreList: [Int]
     let posterPath: String

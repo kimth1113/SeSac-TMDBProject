@@ -9,6 +9,8 @@ import UIKit
 
 class MovieListViewController: UIViewController {
 
+    var genreList: [Int: String] = [:]
+    
     var movieList: [Movie] = []
     var startPage = 1
     var totalCount = 0
@@ -20,13 +22,17 @@ class MovieListViewController: UIViewController {
         super.viewDidLoad()
 
         designNavigationBar()
+        movieListTableView.separatorStyle = .none
         
         movieListTableView.delegate = self
         movieListTableView.dataSource = self
         
         movieListTableView.register(UINib(nibName: MovieListTableViewCell.reuseIdentifier, bundle: nil), forCellReuseIdentifier: MovieListTableViewCell.reuseIdentifier)
         
-        requestMovieList()
+        DispatchQueue.main.async {
+            self.requestGenreList()
+            self.requestMovieList()
+        }
     }
 
     
@@ -38,11 +44,17 @@ class MovieListViewController: UIViewController {
             self.movieList.append(contentsOf: list)
             
             DispatchQueue.main.async {
+                
                 self.movieListTableView.reloadData()
             }
         }
-        
-        
+    }
+    
+    func requestGenreList() {
+        TMDBAPIManager.shared.getGenreList { genreDictionary in
+            
+            self.genreList = genreDictionary
+        }
     }
 }
 
@@ -58,13 +70,33 @@ extension MovieListViewController: UITableViewDelegate, UITableViewDataSource {
         
         let data = movieList[indexPath.row]
         
-        cell.bindingMovieData(data: data)
+        let genreList: [String] = data.genreList.map { self.genreList[$0] ?? "알수없음" }
+        
+        cell.bindingMovieData(data: data, genreList: genreList)
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(indexPath)
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let vc = sb.instantiateViewController(withIdentifier: MovieDetailViewController.reuseIdentifier) as? MovieDetailViewController else {
+            return
+        }
+        
+        vc.movieData = movieList[indexPath.row]
+        
+        
+        TMDBAPIManager.shared.getCreditList(movieId: self.movieList[indexPath.row].movieId) { list in
+            vc.creditList = list
+            
+            DispatchQueue.main.async {
+                
+                self.navigationController?.pushViewController(vc, animated: true)
+            }
+        }
+        
+        
+
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -72,6 +104,7 @@ extension MovieListViewController: UITableViewDelegate, UITableViewDataSource {
         
         return height
     }
+    
 }
 
 
@@ -85,5 +118,6 @@ extension MovieListViewController {
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "list.dash"), style: .plain, target: self, action: nil)
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: nil)
+        
     }
 }

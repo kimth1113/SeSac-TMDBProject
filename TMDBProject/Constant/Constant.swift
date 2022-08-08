@@ -18,4 +18,10 @@ class EndPoint {
     
     static let getMovieListURL = "https://api.themoviedb.org/3/movie/popular?"
     static let getMovieImgURL = "https://image.tmdb.org/t/p/w500/"
+    
+    static let getGenreListURL = "https://api.themoviedb.org/3/genre/movie/list?"
+    
+    static let getCreditListURL = "https://api.themoviedb.org/3/movie/"
+    
+    static let getCastProfilePathURL = "https://image.tmdb.org/t/p/w500/"
 }
